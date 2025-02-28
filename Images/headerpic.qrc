@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="newPrefix">
+    <file>../../../Icons for SSIS/Untitled_design-removebg-preview.png</file>
+  </qresource>
+</RCC>
