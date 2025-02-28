@@ -1,1 +1,1 @@
-# Student-Information-System-v1
+# Student Information System version 1
