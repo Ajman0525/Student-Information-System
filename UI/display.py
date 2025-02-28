@@ -46,6 +46,7 @@ class Display(object):
         self.label.setPixmap(QtGui.QPixmap(":/newPrefix/Icons for SSIS/Untitled_design-removebg-preview.png"))
         self.label.setScaledContents(True)
         self.label.setObjectName("label")
+        
 
         # ADD BUTTON
         # ------------------------------------------------
@@ -61,6 +62,8 @@ class Display(object):
         # ------------------------------------------------
         UpdateButton(self) 
         self.updateButton.clicked.connect(lambda: self.updateCsv(self.getActiveCsvFile()))
+        self.updateButton.setVisible(False) 
+        self.last_update_type = None
 
         # EDIT BUTTON
         # ------------------------------------------------
@@ -236,21 +239,43 @@ class Display(object):
         selected_tab = self.tabWidget.currentIndex()
         selected_rows = self.tableView.selectionModel().selectedRows()
         
-
         if not selected_rows:
             QMessageBox.warning(None, "Warning", "Please select a row")
             return
 
-        confirm = QMessageBox.question(None, "Confirm Deletion", 
-                                    "Are you sure you want to delete the selected row? This will also affect related entries.", 
-                                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        # Custom Messages Based on Tab
+        if selected_tab == 0:  # Student Tab
+            title = "Delete Student"
+            message = "\nAre you sure you want to delete the selected student?\nThis action cannot be undone!"
+            icon = QMessageBox.Warning
 
-        if confirm == QMessageBox.No:
+        elif selected_tab == 1:  # Program Tab
+            title = "Delete Program"
+            message = "\nAre you sure you want to delete this program?\n It will affect all students enrolled in it."
+            icon = QMessageBox.Critical
+
+        elif selected_tab == 2:  # College Tab
+            title = "Delete College"
+            message = "\nAre you sure you want to delete this college?\nAll associated entries will be affected."
+            icon = QMessageBox.Question
+
+
+        # Create Unique QMessageBox
+        confirm = QMessageBox()
+        confirm.setWindowTitle(title)
+        confirm.setText(message)
+        confirm.setIcon(icon)
+        confirm.setWindowIcon(QIcon("Images/ChickIcon.png"))  # Set custom icon
+        confirm.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        confirm.setDefaultButton(QMessageBox.No)
+        
+        response = confirm.exec_()
+
+        if response == QMessageBox.No:
             return
 
+        # Proceed with deletion logic
         selected_rows.sort(reverse=True, key=lambda x: x.row())  # Avoid shifting issues
-
-        #delete_ids = []
 
         for index in selected_rows:
             source_index = self.proxy_model.mapToSource(index)
@@ -258,8 +283,6 @@ class Display(object):
             row_data = [self.model.item(actual_row, col).text() if self.model.item(actual_row, col) else "" 
                         for col in range(self.model.columnCount())]
 
-            #delete_ids.append(row_data[0])
-            
             self.model.removeRow(actual_row)
 
             if selected_tab == 2:  # College Tab
@@ -268,12 +291,12 @@ class Display(object):
             elif selected_tab == 1:  # Program Tab
                 self.cascade_delete_program(row_data[0])
 
-            elif selected_tab == 0: # Student Tab
+            elif selected_tab == 0:  # Student Tab
                 if not hasattr(self, 'pending_student_deletions'):
-                    self.pending_student_deletions = set()  # Initialize pending deletions list
-                
+                    self.pending_student_deletions = set()
                 self.pending_student_deletions.add(row_data[0])
 
+    
 
     # SAVING CSV CHANGES
     # ----------------------------------------------------------------
@@ -298,8 +321,19 @@ class Display(object):
                     row_data.append(item if item else "")
                 writer.writerow(row_data)
 
-        QMessageBox.information(None, "Success", "Changes saved successfully!")
+        if self.last_update_type == "Student":
+            QMessageBox.information(None, "Success", "Student records have been updated successfully!")
+        elif self.last_update_type == "Program":
+            QMessageBox.information(None, "Success", "Program records have been updated successfully!")
+        elif self.last_update_type == "College":
+            QMessageBox.information(None, "Success", "College records have been updated successfully!")
+        else:
+            QMessageBox.information(None, "Success", "Changes saved successfully!")
 
+        self.updateButton.setVisible(False)  # ✅ Hide update button after saving
+        self.last_update_type = None  # ✅ Reset update type
+
+        
     def getActiveCsvFile(self):
         if self.tabWidget.currentIndex() == 0:
             return "CSV Files/SSIS - STUDENT.csv"
@@ -622,6 +656,8 @@ class Display(object):
             self.model.setItem(row, col, item)
 
         #proxy_model.sort(0, QtCore.Qt.AscendingOrder)
+        self.last_update_type = "Student"
+        self.updateButton.setVisible(True)
 
         QMessageBox.information(None, "Success", "Changes applied! Click 'Update' to save them permanently.")
     
@@ -925,8 +961,13 @@ class Display(object):
 
             self.proxy_model.sort(0, QtCore.Qt.AscendingOrder)
 
+
+            self.last_update_type = "Student"
+            self.updateButton.setVisible(True)
+
             QMessageBox.information(None, "Success", "Student added successfully! Click 'Update' to save changes.")
 
+            self.updateButton.setVisible(True)
         except Exception as e:
             QMessageBox.critical(None, "Error", f"Failed to add student:\n{str(e)}")   
 
@@ -939,12 +980,14 @@ class Display(object):
         try:
             items = [QtGui.QStandardItem(field) for field in new_data]
             self.model.appendRow(items)  
+             
 
-            #self.proxy_model.sort(0, QtCore.Qt.AscendingOrder)
-
-            self.update_student_program_combobox(new_data[0])  # Update Student ComboBox
+            self.last_update_type = "Program"
+            self.updateButton.setVisible(True)
 
             QMessageBox.information(None, "Success", "Program added successfully! Click 'Update' to save changes.")
+
+            
         except Exception as e:
             QMessageBox.critical(None, "Error", f"Failed to add program:\n{str(e)}")
 
@@ -965,11 +1008,12 @@ class Display(object):
             items = [QtGui.QStandardItem(field) for field in new_data]
             self.model.appendRow(items)  
 
-            #self.proxy_model.sort(0, QtCore.Qt.AscendingOrder)
-
-            self.update_college_code_combobox(new_data[0])  # Update Program ComboBox
+            self.last_update_type = "College"
+            self.updateButton.setVisible(True)
 
             QMessageBox.information(None, "Success", "College added successfully! Click 'Update' to save changes.")
+
+            
         except Exception as e:
             QMessageBox.critical(None, "Error", f"Failed to add college:\n{str(e)}")
 
@@ -1002,4 +1046,9 @@ class Display(object):
         
         if dialog.exec_() == QtWidgets.QDialog.Accepted:
             new_data = dialog.get_data()
-            self.add_student_to_csv(new_data)
+            if current_tab == 0:
+                self.add_student_to_csv(new_data)
+            elif current_tab == 1:
+                self.add_program_to_csv(new_data)
+            elif current_tab == 2:
+                self.add_college_to_csv(new_data)
