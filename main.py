@@ -1,17 +1,18 @@
 #####################################################################################
-#                             STUDENT INFORMATION SYSTEM                            #                 
+#                          STUDENT INFORMATION SYSTEM                               #                 
 #                                                                                   #
 #  Made by: Ajman L. Mocsana                                                        #
-#  Date:  From January 28, 2025 to February 25, 2025                                #
+#  Date:  From January 28, 2025 to February 28, 2025                                #
 #####################################################################################
 
 
 import sys
 from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QApplication
 from UI.display import Display
 
 def main():
-    app = QtWidgets.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Display()
     ui.setupUi(MainWindow)
