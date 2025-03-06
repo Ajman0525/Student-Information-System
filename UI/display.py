@@ -826,7 +826,7 @@ class Display(object):
         self.studentCsv()
 
         self.displayTabs(self.tabWidget.currentIndex())
-
+        QMessageBox.information(None, "Success", "College deleted and associated entries updated successfully!")
 
     def cascade_delete_program(self, program_code):
         program_file = "CSV Files/SSIS - PROGRAM.csv"
