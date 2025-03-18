@@ -293,7 +293,7 @@ class Display(object):
 
             elif selected_tab == 0:  # Student Tab
                 student_id = row_data[0]
-                self.model.removeRow(actual_row)
+              
                 
                 file_name = "CSV Files/SSIS - STUDENT.csv"
                 with open(file_name, "r", newline="", encoding="utf-8") as file:
