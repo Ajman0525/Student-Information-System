@@ -292,9 +292,19 @@ class Display(object):
                 self.cascade_delete_program(row_data[0])
 
             elif selected_tab == 0:  # Student Tab
-                if not hasattr(self, 'pending_student_deletions'):
-                    self.pending_student_deletions = set()
-                self.pending_student_deletions.add(row_data[0])
+                student_id = row_data[0]
+                self.model.removeRow(actual_row)
+                
+                file_name = "CSV Files/SSIS - STUDENT.csv"
+                with open(file_name, "r", newline="", encoding="utf-8") as file:
+                    reader = csv.reader(file)
+                    students = [row for row in reader if row[0] != student_id]
+            
+                with open(file_name, "w", newline="", encoding="utf-8") as file:
+                    writer = csv.writer(file)
+                    writer.writerows(students)
+            
+                QMessageBox.information(None, "Success", "Student deleted successfully!")
 
     
 
