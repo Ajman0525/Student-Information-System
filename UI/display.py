@@ -807,10 +807,16 @@ class Display(object):
             writer = csv.writer(file)
             writer.writerows(colleges)
 
-        #  Remove Programs under the College
+        # Mark Programs under the deleted College as CLOSED
         with open(program_file, "r", newline="", encoding="utf-8") as file:
             reader = csv.reader(file)
-            programs = [row for row in reader if row[2] != college_code]  # Filter out programs under deleted college
+            programs = []
+            closed_program_codes = set()
+            for row in reader:
+                if row[2] == college_code:
+                    row[2] = "CLOSED"  
+                    closed_program_codes.add(row[0])
+                programs.append(row)
 
         with open(program_file, "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
@@ -820,10 +826,9 @@ class Display(object):
         with open(student_file, "r", newline="", encoding="utf-8") as file:
             reader = csv.reader(file)
             students = []
-            deleted_programs = {p[0] for p in programs}  # Get remaining program codes
             for row in reader:
-                if row[5] not in deleted_programs:  
-                    row[5] = "UNENROLLED"  # If student's program was deleted, mark as UNENROLLED
+                if row[5] in closed_program_codes:
+                    row[5] = "UNENROLLED"
                 students.append(row)
 
         with open(student_file, "w", newline="", encoding="utf-8") as file:
