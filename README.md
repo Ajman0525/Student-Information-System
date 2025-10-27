@@ -103,4 +103,5 @@ StudentInformationSystem/
 
 ## 💡 Acknowledgments
 
-- Developed using **PyQt5** and **Qt Designer**.  
+- Developed using **PyQt5** and **Qt Designer**.
+- Developed the UI/UX design with the help of @Shayne-Frances
